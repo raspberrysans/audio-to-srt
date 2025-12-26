@@ -20,7 +20,7 @@ import {
 	sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase';
 
 interface UserData {
 	email: string;
@@ -71,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	const fetchUserData = useCallback(
 		async (user: User) => {
 			try {
+				const db = getFirebaseDb();
 				const userDoc = await getDoc(doc(db, 'users', user.uid));
 				if (userDoc.exists()) {
 					const data = userDoc.data();
@@ -92,7 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						isAdmin: isAdmin,
 						createdAt: new Date(),
 					};
-					await setDoc(doc(db, 'users', user.uid), newUserData);
+					const dbForCreate = getFirebaseDb();
+					await setDoc(doc(dbForCreate, 'users', user.uid), newUserData);
 					setUserData({
 						...newUserData,
 						maxFreeConversions: isAdmin ? 999999 : 2,
@@ -106,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	);
 
 	useEffect(() => {
+		const auth = getFirebaseAuth();
 		const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
 			setUser(user);
 			if (user) {
@@ -127,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const signIn = async (email: string, password: string) => {
 		try {
+			const auth = getFirebaseAuth();
 			await signInWithEmailAndPassword(auth, email, password);
 		} catch (error) {
 			throw error;
@@ -135,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const signUp = async (email: string, password: string) => {
 		try {
+			const auth = getFirebaseAuth();
 			await createUserWithEmailAndPassword(auth, email, password);
 		} catch (error) {
 			throw error;
@@ -143,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const signInWithGoogle = async () => {
 		try {
+			const auth = getFirebaseAuth();
 			await signInWithPopup(auth, googleProvider);
 		} catch (error) {
 			throw error;
@@ -151,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const logout = async () => {
 		try {
+			const auth = getFirebaseAuth();
 			await signOut(auth);
 		} catch (error) {
 			throw error;
@@ -159,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const resetPassword = async (email: string) => {
 		try {
+			const auth = getFirebaseAuth();
 			await sendPasswordResetEmail(auth, email);
 		} catch (error) {
 			throw error;
@@ -176,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		if (!user || !userData) return;
 
 		try {
+			const db = getFirebaseDb();
 			const userRef = doc(db, 'users', user.uid);
 			await updateDoc(userRef, {
 				conversionsUsed: increment(1),

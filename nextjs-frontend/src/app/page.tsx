@@ -101,7 +101,7 @@ export default function Home() {
 						: 'An unexpected error occurred',
 			});
 		}
-	}, [file, settings]);
+	}, [file, settings, backendUrl]);
 
 	const handleDownload = useCallback(async () => {
 		if (!conversionState.downloadToken) return;
@@ -141,7 +141,7 @@ export default function Home() {
 				error: 'Failed to download file',
 			}));
 		}
-	}, [conversionState.downloadToken, conversionState.filename]);
+	}, [conversionState.downloadToken, conversionState.filename, backendUrl]);
 
 	const handleReset = useCallback(() => {
 		setFile(null);
